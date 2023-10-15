@@ -1,0 +1,32 @@
+using Dataminer.Services;
+using System.Diagnostics;
+
+namespace Dataminer
+{
+    public class Scheduler : BackgroundService
+    {
+        private readonly ILogger<Scheduler> _logger;
+        private readonly SummonerByLeagueService _summonerByLeagueService;
+
+        public Scheduler(ILogger<Scheduler> logger, SummonerByLeagueService summonerByLeagueService)
+        {
+            _logger = logger;
+            _summonerByLeagueService = summonerByLeagueService;
+        }
+
+        protected override async Task ExecuteAsync(CancellationToken stoppingToken)
+        {
+            while (!stoppingToken.IsCancellationRequested)
+            {
+                _logger.LogInformation("Worker running at: {time}", DateTimeOffset.Now);
+
+                Stopwatch watch = Stopwatch.StartNew();
+                await _summonerByLeagueService.validateSummonerByLeague();
+
+                watch.Stop();
+                _logger.LogInformation($"Finished after {watch.ElapsedMilliseconds} ms");
+                await Task.Delay(10000, stoppingToken);
+            }
+        }
+    }
+}
