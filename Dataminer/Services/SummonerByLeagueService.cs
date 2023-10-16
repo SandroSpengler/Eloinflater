@@ -12,7 +12,6 @@ namespace Dataminer.Services
 {
     public class SummonerByLeagueService
     {
-
         private readonly ILogger<SummonerByLeagueService> _logger;
         private readonly ISummonerByLeagueRepository _repository;
 

@@ -13,7 +13,6 @@ namespace Core.Repository
 {
     public class SummonerByLeagueRepository : ISummonerByLeagueRepository
     {
-
         private readonly ILogger<SummonerByLeagueRepository> _logger;
 
         private readonly IMongoDatabase _mongoDB;
