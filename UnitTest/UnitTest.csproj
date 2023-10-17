@@ -24,6 +24,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Core\Core.csproj" />
+    <ProjectReference Include="..\Dataminer\Dataminer.csproj" />
   </ItemGroup>
 
 </Project>

@@ -18,6 +18,10 @@ namespace Core.Repository
         private readonly IMongoDatabase _mongoDB;
         private readonly IMongoCollection<SummonerByLeague> _mongoCollection;
 
+        public SummonerByLeagueRepository()
+        {
+        }
+
         public SummonerByLeagueRepository(ILogger<SummonerByLeagueRepository> logger, IMongoDatabase mongoDB)
         {
             _logger = logger;

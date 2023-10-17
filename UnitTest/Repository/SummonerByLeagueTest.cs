@@ -13,25 +13,25 @@ namespace UnitTest.Repository
 {
     public class SummonerByLeagueTest
     {
-        private Mock<IMongoDatabase> mongoDBMock;
-        private Mock<ILogger<SummonerByLeagueRepository>> loggerMock;
-        private Mock<MongoCollectionBase<SummonerByLeague>> summonerByLeagueCollectionMock;
-        private Mock<MongoCollectionSettings> collectionSettingsMock;
+        private Mock<IMongoDatabase> _mongoDBMock;
+        private Mock<ILogger<SummonerByLeagueRepository>> _loggerMock;
+        private Mock<MongoCollectionBase<SummonerByLeague>> _summonerByLeagueCollectionMock;
+        private Mock<MongoCollectionSettings> _collectionSettingsMock;
 
         [SetUp]
         public void Setup()
         {
-            loggerMock = new Mock<ILogger<SummonerByLeagueRepository>>();
-            ILogger<SummonerByLeagueRepository> logger = loggerMock.Object;
+            _loggerMock = new Mock<ILogger<SummonerByLeagueRepository>>();
+            ILogger<SummonerByLeagueRepository> logger = _loggerMock.Object;
 
-            summonerByLeagueCollectionMock = new Mock<MongoCollectionBase<SummonerByLeague>>();
-            collectionSettingsMock = new Mock<MongoCollectionSettings>();
-            mongoDBMock = new Mock<IMongoDatabase>();
+            _summonerByLeagueCollectionMock = new Mock<MongoCollectionBase<SummonerByLeague>>();
+            _collectionSettingsMock = new Mock<MongoCollectionSettings>();
+            _mongoDBMock = new Mock<IMongoDatabase>();
 
-            mongoDBMock
+            _mongoDBMock
             .Setup(db =>
                 db.GetCollection<SummonerByLeague>("summonerbyleagueschemas", null))
-            .Returns(summonerByLeagueCollectionMock.Object);
+            .Returns(_summonerByLeagueCollectionMock.Object);
         }
 
         [Test]
@@ -45,7 +45,7 @@ namespace UnitTest.Repository
             mockAsyncCursor.SetupSequence
             (_ => _.MoveNext(It.IsAny<CancellationToken>())).Returns(true).Returns(false);
 
-            summonerByLeagueCollectionMock
+            _summonerByLeagueCollectionMock
             .Setup(_ => _.FindAsync(
                 It.IsAny<FilterDefinition<SummonerByLeague>>(),
                 It.IsAny<FindOptions<SummonerByLeague, SummonerByLeague>>(),
@@ -53,7 +53,7 @@ namespace UnitTest.Repository
             ))
             .ReturnsAsync(mockAsyncCursor.Object);
 
-            var summonerByLeagueRepository = new SummonerByLeagueRepository(loggerMock.Object, mongoDBMock.Object);
+            var summonerByLeagueRepository = new SummonerByLeagueRepository(_loggerMock.Object, _mongoDBMock.Object);
 
             var builder = Builders<SummonerByLeague>.Filter.Empty;
 

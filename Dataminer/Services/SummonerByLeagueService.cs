@@ -33,6 +33,31 @@ namespace Dataminer.Services
             {
                 _logger.LogInformation($"SummonerByLeagueCollectionName {sbl.tier}");
             }
+
+            // Check if last update longer than 8 hours ago
+            // get new summonerbyleague from riot games
+            // overwrite summonerbyleague in db
+            // update all summoner in db with new information
+        }
+
+        /// <summary>
+        /// checks if the last update has been long enough
+        /// </summary>
+        /// <param name="lastUpdate">time of the last update as a UNIX-Timestamp in MS</param>
+        /// <param name="updateInterval">how often an update can occur as a UNIX-Timestamp</param>
+        /// <returns></returns>
+        public bool isUpdateable(long lastUpdate, long updateInterval)
+        {
+            long epochTicks = new DateTime(1970, 1, 1).Ticks;
+            long currentDate = ((DateTime.UtcNow.Ticks - epochTicks) / TimeSpan.TicksPerSecond) * 1000;
+            long updateThreshold = currentDate - updateInterval;
+
+            if (lastUpdate < updateThreshold)
+            {
+                return true;
+            }
+
+            return false;
         }
     }
 }
