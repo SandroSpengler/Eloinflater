@@ -7,16 +7,13 @@ FROM mcr.microsoft.com/dotnet/sdk:7.0 AS build
 ARG BUILD_CONFIGURATION=Release
 WORKDIR /src
 COPY ["Dataminer/Dataminer.csproj", "Dataminer/"]
-COPY ["Core/Core.csproj", "Core/"]
-COPY ["Infrastructure/Infrastructure.csproj", "Infrastructure/"]
 RUN dotnet restore "Dataminer/Dataminer.csproj"
 COPY . .
 WORKDIR "/src/Dataminer"
 RUN dotnet build "Dataminer.csproj" -c $BUILD_CONFIGURATION -o /app/build
 
 FROM build AS publish
-RUN dotnet publish "Dataminer.csproj" -o /app/publish /p:UseAppHost=false
-#RUN dotnet publish "Dataminer.csproj" -c $BUILD_CONFIGURATION -o /app/publish /p:UseAppHost=false
+RUN dotnet publish "Dataminer.csproj" -c $BUILD_CONFIGURATION -o /app/publish /p:UseAppHost=false
 
 FROM base AS final
 WORKDIR /app

@@ -10,4 +10,8 @@
     <ProjectReference Include="..\Infrastructure\Infrastructure.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <PackageReference Include="RestEase" Version="1.6.4" />
+  </ItemGroup>
+
 </Project>

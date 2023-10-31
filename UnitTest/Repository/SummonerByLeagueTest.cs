@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Core.Model;
+﻿using Core.Model;
 using Core.Repository;
 using Microsoft.Extensions.Logging;
 using MongoDB.Driver;
@@ -32,14 +27,10 @@ namespace UnitTest.Repository
             .Setup(db =>
                 db.GetCollection<SummonerByLeague>("summonerbyleagueschemas", null))
             .Returns(_summonerByLeagueCollectionMock.Object);
-        }
-
-        [Test]
-        public async Task ShouldReturnSummonersFromDB()
-        {
-            SummonerByLeague[] summonerbyleague = new[] { new SummonerByLeague() };
 
             var mockAsyncCursor = new Mock<IAsyncCursor<SummonerByLeague>>();
+
+            SummonerByLeague[] summonerbyleague = new[] { new SummonerByLeague() };
 
             mockAsyncCursor.Setup(_ => _.Current).Returns(summonerbyleague);
             mockAsyncCursor.SetupSequence
@@ -52,7 +43,11 @@ namespace UnitTest.Repository
                 It.IsAny<CancellationToken>()
             ))
             .ReturnsAsync(mockAsyncCursor.Object);
+        }
 
+        [Test]
+        public async Task ShouldReturnSummonersFromDB()
+        {
             var summonerByLeagueRepository = new SummonerByLeagueRepository(_loggerMock.Object, _mongoDBMock.Object);
 
             var builder = Builders<SummonerByLeague>.Filter.Empty;
