@@ -1,5 +1,6 @@
 ﻿using Core.Interfaces;
 using Core.Model;
+using Core.Model.Database;
 using Microsoft.Extensions.Logging;
 using MongoDB.Driver;
 
@@ -11,17 +12,19 @@ namespace Core.Repository
 
         private readonly IMongoDatabase _mongoDB;
         private readonly IMongoCollection<SummonerByLeague> _mongoCollection;
+        private readonly IDateService _dateService;
 
         public SummonerByLeagueRepository()
         {
         }
 
-        public SummonerByLeagueRepository(ILogger<SummonerByLeagueRepository> logger, IMongoDatabase mongoDB)
+        public SummonerByLeagueRepository(ILogger<SummonerByLeagueRepository> logger, IMongoDatabase mongoDB, IDateService dateService)
         {
             _logger = logger;
             _mongoDB = mongoDB;
 
             _mongoCollection = _mongoDB.GetCollection<SummonerByLeague>("summonerbyleagueschemas");
+            _dateService = dateService;
         }
 
         public virtual async Task<IEnumerable<SummonerByLeague>> findSummonerByLeagueWithFilter(FilterDefinition<SummonerByLeague> filterDefinition)
@@ -29,6 +32,17 @@ namespace Core.Repository
             var result = await _mongoCollection.FindAsync(filterDefinition);
 
             return result.ToEnumerable();
+        }
+
+        public virtual async Task updateSummonerByLeague(SummonerByLeague summonerByLeague)
+        {
+            var builder = Builders<SummonerByLeague>.Filter;
+
+            var filter = builder.Eq("_id", summonerByLeague);
+
+            summonerByLeague.updatedAt = _dateService.generateUnixTimeStampMilliseconds();
+
+            var result = await _mongoCollection.ReplaceOneAsync(filter, summonerByLeague);
         }
     }
 }

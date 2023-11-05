@@ -1,4 +1,6 @@
-﻿using Core.Model;
+﻿using Core;
+using Core.Interfaces;
+using Core.Model;
 using Core.Repository;
 using Microsoft.Extensions.Logging;
 using MongoDB.Driver;
@@ -12,6 +14,7 @@ namespace UnitTest.Repository
         private Mock<ILogger<SummonerByLeagueRepository>> _loggerMock;
         private Mock<MongoCollectionBase<SummonerByLeague>> _summonerByLeagueCollectionMock;
         private Mock<MongoCollectionSettings> _collectionSettingsMock;
+        private Mock<IDateService> _dateServiceMock;
 
         [SetUp]
         public void Setup()
@@ -20,6 +23,7 @@ namespace UnitTest.Repository
             ILogger<SummonerByLeagueRepository> logger = _loggerMock.Object;
 
             _summonerByLeagueCollectionMock = new Mock<MongoCollectionBase<SummonerByLeague>>();
+            _dateServiceMock = new Mock<IDateService>();
             _collectionSettingsMock = new Mock<MongoCollectionSettings>();
             _mongoDBMock = new Mock<IMongoDatabase>();
 
@@ -48,7 +52,7 @@ namespace UnitTest.Repository
         [Test]
         public async Task ShouldReturnSummonersFromDB()
         {
-            var summonerByLeagueRepository = new SummonerByLeagueRepository(_loggerMock.Object, _mongoDBMock.Object);
+            var summonerByLeagueRepository = new SummonerByLeagueRepository(_loggerMock.Object, _mongoDBMock.Object, _dateServiceMock.Object);
 
             var builder = Builders<SummonerByLeague>.Filter.Empty;
 

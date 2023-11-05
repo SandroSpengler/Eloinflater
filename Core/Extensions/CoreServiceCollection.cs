@@ -10,6 +10,7 @@ namespace Core.Extensions
         {
             services.AddSingleton<ISummonerByLeagueRepository, SummonerByLeagueRepository>();
             services.AddSingleton<ISummonerRepository, SummonerRepository>();
+            services.AddSingleton<IDateService, DateService>();
 
             return services;
         }

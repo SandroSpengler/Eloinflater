@@ -6,6 +6,7 @@ using Core.Model.Riot_Games;
 using Dataminer.Interfaces;
 using MongoDB.Bson;
 using MongoDB.Driver;
+using System.Reflection.Metadata;
 
 namespace Dataminer.Services
 {
@@ -15,6 +16,8 @@ namespace Dataminer.Services
         private readonly ISummonerByLeagueRepository _sblRepository;
         private readonly ISummonerRepository _summonerRepository;
         private readonly IRiotGamesApi _riotGamesApi;
+        private readonly FilterDefinitionBuilder<Summoner> _summonerBuilder;
+        private readonly FilterDefinitionBuilder<SummonerByLeague> _sblBuilder;
 
         public SummonerByLeagueService(
             ILogger<SummonerByLeagueService> logger,
@@ -27,87 +30,42 @@ namespace Dataminer.Services
             _sblRepository = summonerByLeagueRepository;
             _summonerRepository = summonerRepository;
             _riotGamesApi = riotGamesApi;
+            _summonerBuilder = Builders<Summoner>.Filter;
+            _sblBuilder = Builders<SummonerByLeague>.Filter;
         }
 
-        /// <summary>
-        /// Refreshes all Summoners in Master and above every 12H
-        /// </summary>
-        /// <returns></returns>
         public async Task validateSummonerByLeague()
         {
-            var sblBuilder = Builders<SummonerByLeague>.Filter.Empty;
-            var summonerBuilder = Builders<Summoner>.Filter;
-
             long UpdateInterval_12H = 12 * 60 * 60 * 1000;
-            var summonerByLeague = (await _sblRepository.findSummonerByLeagueWithFilter(sblBuilder))
+            var summonerByLeagueDB = (await _sblRepository.findSummonerByLeagueWithFilter(_sblBuilder.Empty))
                 .ToList();
 
-            foreach (SummonerByLeague sbl in summonerByLeague)
+            foreach (SummonerByLeague sblDB in summonerByLeagueDB)
             {
-                _logger.LogInformation("Updating SummonerByLeague {0}", sbl.tier);
+                _logger.LogInformation("Updating SummonerByLeague {0}", sblDB.tier);
 
-                if (!isUpdateable(sbl.updatedAt, UpdateInterval_12H)) continue;
+                if (!isUpdateable(sblDB.updatedAt, UpdateInterval_12H)) continue;
 
                 try
                 {
-                    RGApiSummonerByLeague riotSummonerByLeague = await _riotGamesApi.GetSummonerByLeague(sbl.tier, Queue.RANKED_SOLO_5x5);
+                    // ToDo
+                    // reset all with rank in DB
+                    // find summonerWithFilter => UpdateSummonerByFilter
+                    var summonerWithRank = await _summonerRepository.findSummonerWithFilter(
+                        _summonerBuilder.Eq(
+                            s => s.rankSolo, sblDB.tier.ToString()
+                        )
+                    );
 
-                    int index = 0;
-                    int lastPercent = 0;
-                    foreach (RGEntry entry in riotSummonerByLeague.entries)
-                    {
-                        var filter = summonerBuilder.Eq(s => s._id, entry.summonerId);
+                    RGApiSummonerByLeague riotSummonerByLeague = await _riotGamesApi.GetSummonerByLeague(sblDB.tier, Queue.RANKED_SOLO_5x5);
 
-                        Summoner summonerDB = await _summonerRepository.findOneSummonerWithFilter(filter);
-
-                        double percentage = ((double)index / riotSummonerByLeague.entries.Count) * 100;
-
-                        Summoner summoner = new Summoner();
-
-                        summoner._id = entry.summonerId;
-                        summoner.rankSolo = sbl.tier.ToString();
-                        summoner.name = entry.summonerName;
-                        summoner.leaguePoints = entry.leaguePoints;
-                        summoner.rank = entry.rank;
-                        summoner.wins = entry.wins;
-                        summoner.losses = entry.losses;
-                        summoner.veteran = entry.veteran;
-                        summoner.inactive = entry.inactive;
-                        summoner.freshBlood = entry.freshBlood;
-                        summoner.hotStreak = entry.hotStreak;
-
-                        if (summonerDB == null)
-                        {
-                            await _summonerRepository.createSummoner(summoner);
-
-                            _logger.LogInformation("Created - {0}/{1} - {2}%",
-                                index,
-                                riotSummonerByLeague.entries.Count,
-                                index == 0 ? 0 : (int)percentage
-                            );
-
-                            index++;
-
-                            continue;
-                        }
-
-                        await _summonerRepository.updateSummoner(summoner);
-
-                        if ((int)percentage >= lastPercent + 5)
-                        {
-                            _logger.LogInformation("Updated - {0}/{1} - {2}%",
-                                index,
-                                riotSummonerByLeague.entries.Count,
-                                index == 0 ? 0 : (int)percentage
-                            );
-                            lastPercent = (int)percentage;
-                        }
-                        index++;
-                    }
+                    await updateAllSummonerByLeagueEntries(sblDB, riotSummonerByLeague);
 
                     // ToDo Update SummonerByLeague
+                    // Map riotSummonerByLeague -> sblDB
+                    //await _sblRepository.updateSummoner(sblDB);
 
-                    _logger.LogInformation("Finished updating SummonerByLeague {0}", sbl.tier);
+                    _logger.LogInformation("Finished updating SummonerByLeague {0}", sblDB.tier);
                 }
                 catch (Exception ex)
                 {
@@ -116,12 +74,62 @@ namespace Dataminer.Services
             }
         }
 
-        /// <summary>
-        /// Checks if an update has been done before the last updateInterval
-        /// </summary>
-        /// <param name="lastUpdate">time of the last update as a UNIX-Timestamp in MS</param>
-        /// <param name="updateInterval">how often an update can occur as a UNIX-Timestamp</param>
-        /// <returns></returns>
+        public async Task updateAllSummonerByLeagueEntries(SummonerByLeague sblDB, RGApiSummonerByLeague sblRiot)
+        {
+            int index = 0;
+            int lastPercent = 0;
+            foreach (RGEntry entry in sblRiot.entries)
+            {
+                var filter = _summonerBuilder.Eq(s => s._id, entry.summonerId);
+
+                Summoner summonerDB = await _summonerRepository.findOneSummonerWithFilter(filter);
+
+                double percentage = ((double)index / sblRiot.entries.Count) * 100;
+
+                Summoner summoner = new Summoner();
+
+                summoner._id = entry.summonerId;
+                summoner.rankSolo = sblDB.tier.ToString();
+                summoner.name = entry.summonerName;
+                summoner.leaguePoints = entry.leaguePoints;
+                summoner.rank = entry.rank;
+                summoner.wins = entry.wins;
+                summoner.losses = entry.losses;
+                summoner.veteran = entry.veteran;
+                summoner.inactive = entry.inactive;
+                summoner.freshBlood = entry.freshBlood;
+                summoner.hotStreak = entry.hotStreak;
+
+                if (summonerDB == null)
+                {
+                    await _summonerRepository.createSummoner(summoner);
+
+                    _logger.LogInformation("Created - {0}/{1} - {2}%",
+                        index,
+                        sblRiot.entries.Count,
+                        index == 0 ? 0 : (int)percentage
+                    );
+
+                    index++;
+
+                    continue;
+                }
+
+                await _summonerRepository.updateSummoner(summoner);
+
+                if ((int)percentage >= lastPercent + 5)
+                {
+                    _logger.LogInformation("Updated - {0}/{1} - {2}%",
+                        index,
+                        sblRiot.entries.Count,
+                        index == 0 ? 0 : (int)percentage
+                    );
+                    lastPercent = (int)percentage;
+                }
+                index++;
+            }
+        }
+
         public bool isUpdateable(long lastUpdate, long updateInterval)
         {
             long epochTicks = new DateTime(1970, 1, 1).Ticks;

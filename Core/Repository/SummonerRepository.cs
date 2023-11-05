@@ -18,15 +18,17 @@ namespace Core.Repository
 
         private readonly IMongoDatabase _mongoDB;
         private readonly IMongoCollection<Summoner> _mongoCollection;
+        private readonly IDateService _dateService;
 
         public SummonerRepository()
         {
         }
 
-        public SummonerRepository(ILogger<SummonerRepository> logger, IMongoDatabase mongoDB)
+        public SummonerRepository(ILogger<SummonerRepository> logger, IMongoDatabase mongoDB, IDateService dateService)
         {
             _logger = logger;
             _mongoDB = mongoDB;
+            _dateService = dateService;
 
             _mongoCollection = _mongoDB.GetCollection<Summoner>("summonerschemas");
         }
@@ -56,10 +58,7 @@ namespace Core.Repository
 
         public virtual async Task createSummoner(Summoner summoner)
         {
-            long epochTicks = new DateTime(1970, 1, 1).Ticks;
-            long currentDate = ((DateTime.UtcNow.Ticks - epochTicks) / TimeSpan.TicksPerSecond) * 1000;
-
-            summoner.createdAt = currentDate;
+            summoner.createdAt = _dateService.generateUnixTimeStampMilliseconds();
 
             await _mongoCollection.InsertOneAsync(summoner);
         }
