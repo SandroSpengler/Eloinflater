@@ -34,11 +34,11 @@ namespace Core.Repository
             return result.ToEnumerable();
         }
 
-        public virtual async Task updateSummonerByLeague(SummonerByLeague summonerByLeague)
+        public virtual async Task replaceSummonerByLeague(SummonerByLeague summonerByLeague)
         {
             var builder = Builders<SummonerByLeague>.Filter;
 
-            var filter = builder.Eq("_id", summonerByLeague);
+            var filter = builder.Eq("_id", summonerByLeague._id);
 
             summonerByLeague.updatedAt = _dateService.generateUnixTimeStampMilliseconds();
 

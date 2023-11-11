@@ -10,7 +10,8 @@ namespace Core.Interfaces
 
         Task<Summoner> findOneSummonerWithFilter(FilterDefinition<Summoner> filterDefinition);
 
-        Task updateSummoner(Summoner summoner);
+        Task replaceSummoner(Summoner summoner);
+        Task updateSummoner(FilterDefinition<Summoner> filterDefiniton, UpdateDefinition<Summoner> updateDefinition);
 
         Task createSummoner(Summoner summoner);
     }

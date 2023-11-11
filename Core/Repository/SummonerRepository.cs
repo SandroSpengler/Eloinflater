@@ -47,13 +47,18 @@ namespace Core.Repository
             return result.ToEnumerable();
         }
 
-        public virtual async Task updateSummoner(Summoner summoner)
+        public virtual async Task replaceSummoner(Summoner summoner)
         {
             var builder = Builders<Summoner>.Filter;
 
-            var filter = builder.Eq("_id", summoner);
+            var filter = builder.Eq("_id", summoner._id);
 
             var result = await _mongoCollection.ReplaceOneAsync(filter, summoner);
+        }
+
+        public virtual async Task updateSummoner(FilterDefinition<Summoner> filterDefiniton, UpdateDefinition<Summoner> updateDefinition)
+        {
+            var result = await _mongoCollection.UpdateManyAsync(filterDefiniton, updateDefinition);
         }
 
         public virtual async Task createSummoner(Summoner summoner)

@@ -8,6 +8,6 @@ namespace Core.Interfaces
     {
         Task<IEnumerable<SummonerByLeague>> findSummonerByLeagueWithFilter(FilterDefinition<SummonerByLeague> filterDefinition);
 
-        Task updateSummonerByLeague(SummonerByLeague summoner);
+        Task replaceSummonerByLeague(SummonerByLeague summoner);
     }
 }

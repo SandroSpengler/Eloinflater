@@ -16,8 +16,10 @@ namespace Dataminer.Services
         private readonly ISummonerByLeagueRepository _sblRepository;
         private readonly ISummonerRepository _summonerRepository;
         private readonly IRiotGamesApi _riotGamesApi;
-        private readonly FilterDefinitionBuilder<Summoner> _summonerBuilder;
-        private readonly FilterDefinitionBuilder<SummonerByLeague> _sblBuilder;
+        private readonly FilterDefinitionBuilder<Summoner> _summonerFilterBuilder;
+        private readonly UpdateDefinitionBuilder<Summoner> _summonerUpdateBuilder;
+        private readonly FilterDefinitionBuilder<SummonerByLeague> _sblFilterBuilder;
+        private readonly UpdateDefinitionBuilder<SummonerByLeague> _sblUpdateBuilder;
 
         public SummonerByLeagueService(
             ILogger<SummonerByLeagueService> logger,
@@ -30,14 +32,16 @@ namespace Dataminer.Services
             _sblRepository = summonerByLeagueRepository;
             _summonerRepository = summonerRepository;
             _riotGamesApi = riotGamesApi;
-            _summonerBuilder = Builders<Summoner>.Filter;
-            _sblBuilder = Builders<SummonerByLeague>.Filter;
+            _summonerFilterBuilder = Builders<Summoner>.Filter;
+            _summonerUpdateBuilder = Builders<Summoner>.Update;
+            _sblFilterBuilder = Builders<SummonerByLeague>.Filter;
+            _sblUpdateBuilder = Builders<SummonerByLeague>.Update;
         }
 
         public async Task validateSummonerByLeague()
         {
             long UpdateInterval_12H = 12 * 60 * 60 * 1000;
-            var summonerByLeagueDB = (await _sblRepository.findSummonerByLeagueWithFilter(_sblBuilder.Empty))
+            var summonerByLeagueDB = (await _sblRepository.findSummonerByLeagueWithFilter(_sblFilterBuilder.Empty))
                 .ToList();
 
             foreach (SummonerByLeague sblDB in summonerByLeagueDB)
@@ -51,19 +55,26 @@ namespace Dataminer.Services
                     // ToDo
                     // reset all with rank in DB
                     // find summonerWithFilter => UpdateSummonerByFilter
-                    var summonerWithRank = await _summonerRepository.findSummonerWithFilter(
-                        _summonerBuilder.Eq(
+                    await _summonerRepository.updateSummoner(
+                        _summonerFilterBuilder.Eq(
                             s => s.rankSolo, sblDB.tier.ToString()
-                        )
+                        ),
+                        _summonerUpdateBuilder.Set(s => s.rankSolo, "")
                     );
 
-                    RGApiSummonerByLeague riotSummonerByLeague = await _riotGamesApi.GetSummonerByLeague(sblDB.tier, Queue.RANKED_SOLO_5x5);
+                    RGApiSummonerByLeague riotSummonerByLeague = await _riotGamesApi
+                        .GetSummonerByLeague(
+                            sblDB.tier,
+                            Queue.RANKED_SOLO_5x5
+                        );
 
                     await updateAllSummonerByLeagueEntries(sblDB, riotSummonerByLeague);
 
                     // ToDo Update SummonerByLeague
                     // Map riotSummonerByLeague -> sblDB
                     //await _sblRepository.updateSummoner(sblDB);
+
+                    await _sblRepository.replaceSummonerByLeague(sblDB);
 
                     _logger.LogInformation("Finished updating SummonerByLeague {0}", sblDB.tier);
                 }
@@ -80,7 +91,7 @@ namespace Dataminer.Services
             int lastPercent = 0;
             foreach (RGEntry entry in sblRiot.entries)
             {
-                var filter = _summonerBuilder.Eq(s => s._id, entry.summonerId);
+                var filter = _summonerFilterBuilder.Eq(s => s._id, entry.summonerId);
 
                 Summoner summonerDB = await _summonerRepository.findOneSummonerWithFilter(filter);
 
@@ -115,7 +126,7 @@ namespace Dataminer.Services
                     continue;
                 }
 
-                await _summonerRepository.updateSummoner(summoner);
+                await _summonerRepository.replaceSummoner(summoner);
 
                 if ((int)percentage >= lastPercent + 5)
                 {
