@@ -52,9 +52,7 @@ namespace Dataminer.Services
 
                 try
                 {
-                    // ToDo
-                    // reset all with rank in DB
-                    // find summonerWithFilter => UpdateSummonerByFilter
+
                     await _summonerRepository.updateSummoner(
                         _summonerFilterBuilder.Eq(
                             s => s.rankSolo, sblDB.tier.ToString()
