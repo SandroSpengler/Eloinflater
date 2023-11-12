@@ -35,3 +35,4 @@ msbuild.wrn
 /coveragereport
 /UnitTest/TestResults
 appsettings.Development.json
+Dataminer/appsettings.Development.json
