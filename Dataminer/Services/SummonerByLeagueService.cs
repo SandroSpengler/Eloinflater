@@ -1,4 +1,5 @@
-﻿using Core.Enum;
+﻿using AutoMapper;
+using Core.Enum;
 using Core.Interfaces;
 using Core.Model;
 using Core.Model.Database;
@@ -13,6 +14,7 @@ namespace Dataminer.Services
     public class SummonerByLeagueService : ISummonerByLeagueService
     {
         private readonly ILogger<SummonerByLeagueService> _logger;
+        private readonly IMapper _mapper;
         private readonly ISummonerByLeagueRepository _sblRepository;
         private readonly ISummonerRepository _summonerRepository;
         private readonly IRiotGamesApi _riotGamesApi;
@@ -23,12 +25,14 @@ namespace Dataminer.Services
 
         public SummonerByLeagueService(
             ILogger<SummonerByLeagueService> logger,
+            IMapper mapper,
             ISummonerByLeagueRepository summonerByLeagueRepository,
             ISummonerRepository summonerRepository,
             IRiotGamesApi riotGamesApi
         )
         {
             _logger = logger;
+            _mapper = mapper;
             _sblRepository = summonerByLeagueRepository;
             _summonerRepository = summonerRepository;
             _riotGamesApi = riotGamesApi;
@@ -52,25 +56,23 @@ namespace Dataminer.Services
 
                 try
                 {
-
                     await _summonerRepository.updateSummoner(
                         _summonerFilterBuilder.Eq(
                             s => s.rankSolo, sblDB.tier.ToString()
                         ),
-                        _summonerUpdateBuilder.Set(s => s.rankSolo, "")
+                        _summonerUpdateBuilder
+                            .Set(s => s.rankSolo, "")
                     );
 
                     RGApiSummonerByLeague riotSummonerByLeague = await _riotGamesApi
                         .GetSummonerByLeague(
                             sblDB.tier,
-                            Queue.RANKED_SOLO_5x5
+                            Queue.RANKED_SOLO_5x5.ToString()
                         );
 
                     await updateAllSummonerByLeagueEntries(sblDB, riotSummonerByLeague);
 
-                    // ToDo Update SummonerByLeague
-                    // Map riotSummonerByLeague -> sblDB
-                    //await _sblRepository.updateSummoner(sblDB);
+                    var updatedSbl = _mapper.Map<SummonerByLeague>(riotSummonerByLeague);
 
                     await _sblRepository.replaceSummonerByLeague(sblDB);
 
@@ -87,7 +89,7 @@ namespace Dataminer.Services
         {
             int index = 0;
             int lastPercent = 0;
-            foreach (RGEntry entry in sblRiot.entries)
+            foreach (RGApiEntry entry in sblRiot.entries)
             {
                 var filter = _summonerFilterBuilder.Eq(s => s._id, entry.summonerId);
 

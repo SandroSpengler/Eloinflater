@@ -1,6 +1,6 @@
 ﻿namespace Core.Model.Riot_Games
 {
-    public class RGEntry
+    public class RGApiEntry
     {
         public string summonerId { get; set; }
         public string summonerName { get; set; }
@@ -16,10 +16,10 @@
 
     public class RGApiSummonerByLeague
     {
-        public Enum.League tier { get; set; }
+        public string tier { get; set; }
         public string leagueId { get; set; }
-        public Enum.Queue queue { get; set; }
+        public string queue { get; set; }
         public string name { get; set; }
-        public List<RGEntry> entries { get; set; }
+        public List<RGApiEntry> entries { get; set; }
     }
 }

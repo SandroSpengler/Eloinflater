@@ -29,7 +29,7 @@ namespace UnitTest.ServiceCollection
             var _serviceCollection = new Microsoft.Extensions.DependencyInjection.ServiceCollection();
             ILoggerFactory loggerFactory = new Mock<ILoggerFactory>().Object;
 
-            Core.Extensions.CoreServiceCollection.SetupServiceCollection(_serviceCollection);
+            // Core.Extensions.CoreServiceCollection.SetupServiceCollection(_serviceCollection);
 
             var build = _serviceCollection.BuildServiceProvider(new ServiceProviderOptions()
             {

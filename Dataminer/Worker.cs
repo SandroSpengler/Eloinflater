@@ -19,7 +19,7 @@ namespace Dataminer
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            string? interval = _configuration["Scheduler:DataminerInterval"];
+            string interval = _configuration["Scheduler:DataminerInterval"];
 
             while (!stoppingToken.IsCancellationRequested)
             {

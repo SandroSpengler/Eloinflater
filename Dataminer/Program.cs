@@ -1,11 +1,11 @@
+using AutoMapper;
 using Core.Extensions;
 using Core.Interfaces;
 using Dataminer;
 using Dataminer.Interfaces;
 using Dataminer.Services;
 using Infrastructure.Extension;
-using RestEase.HttpClientFactory;
-using System.Net.Http.Headers;
+using Namespace;
 
 IHost host = Host.CreateDefaultBuilder(args)
     .ConfigureServices((hostContext, services) =>
@@ -14,33 +14,10 @@ IHost host = Host.CreateDefaultBuilder(args)
 
         services.AddHostedService<Scheduler>();
         services.AddTransient<ISummonerByLeagueService, SummonerByLeagueService>();
-
-        string? protocol = configuration["RiotGames:Protocol"];
-        string? region = configuration["RiotGames:Region"];
-        string? baseUrl = configuration["RiotGames:BaseUrl"];
-
-        if ((protocol ?? region ?? baseUrl) == null)
-        {
-            throw new ArgumentException(
-                "Missing required environment variable: RiotGames in Dataminer => Program.cs" +
-                "\n " +
-                "Please check the documentation for a template or take a look at the default appsettings.json"
-            );
-        }
-
-        string apiUrl = $"{protocol}://{region}.{baseUrl}";
-
-        services.AddHttpClient(apiUrl)
-            .ConfigureHttpClient(c =>
-            {
-                c.BaseAddress = new Uri(apiUrl);
-                c.DefaultRequestHeaders
-                    .Add("X-Riot-Token", configuration["RiotGames:RGApiKey"]!);
-            })
-            .UseWithRestEaseClient<IRiotGamesApi>();
+        services.AddAutoMapper(typeof(MappingProfile));
 
         InfrastructureServiceCollection.SetupServiceCollection(services, configuration);
-        CoreServiceCollection.SetupServiceCollection(services);
+        CoreServiceCollection.SetupServiceCollection(services, configuration);
     })
     .ConfigureLogging(loggerBuilder =>
     {

@@ -22,7 +22,6 @@ namespace Infrastructure.Extension
             MongoClient dbClient = new(configuration["MongoDB:ConnectionString"]);
 
             IMongoDatabase mongoDB = dbClient.GetDatabase("league");
-
             services.AddSingleton<IMongoDatabase>(mongoDB);
 
             return services;

@@ -15,14 +15,9 @@ namespace Core.Repository
     public class SummonerRepository : ISummonerRepository
     {
         private readonly ILogger<SummonerRepository> _logger;
-
         private readonly IMongoDatabase _mongoDB;
         private readonly IMongoCollection<Summoner> _mongoCollection;
         private readonly IDateService _dateService;
-
-        public SummonerRepository()
-        {
-        }
 
         public SummonerRepository(ILogger<SummonerRepository> logger, IMongoDatabase mongoDB, IDateService dateService)
         {
@@ -49,6 +44,8 @@ namespace Core.Repository
 
         public virtual async Task replaceSummoner(Summoner summoner)
         {
+            summoner.updatedAt = summoner.updatedAt = _dateService!.generateUnixTimeStampMilliseconds();
+
             var builder = Builders<Summoner>.Filter;
 
             var filter = builder.Eq("_id", summoner._id);
@@ -63,7 +60,7 @@ namespace Core.Repository
 
         public virtual async Task createSummoner(Summoner summoner)
         {
-            summoner.createdAt = _dateService.generateUnixTimeStampMilliseconds();
+            summoner.updatedAt = _dateService.generateUnixTimeStampMilliseconds();
 
             await _mongoCollection.InsertOneAsync(summoner);
         }

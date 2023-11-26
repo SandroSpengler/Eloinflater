@@ -31,9 +31,9 @@ namespace Core.Model
         public ObjectId _id { get; set; }
 
         public List<Entry> entries { get; set; }
-        public Enum.League tier { get; set; }
+        public string tier { get; set; }
         public string leagueId { get; set; }
-        public Enum.Queue queue { get; set; }
+        public string queue { get; set; }
         public string name { get; set; }
         public long createdAt { get; set; }
         public long updatedAt { get; set; }

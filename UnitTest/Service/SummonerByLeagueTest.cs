@@ -1,5 +1,6 @@
 ﻿using Amazon.Runtime.Internal.Util;
 using AutoFixture;
+using AutoMapper;
 using Core.Interfaces;
 using Core.Model;
 using Core.Model.Riot_Games;
@@ -20,6 +21,7 @@ namespace UnitTest.Service
     public class SummonerByLeagueTest
     {
         private Mock<ILogger<SummonerByLeagueService>> _loggerMock;
+        private Mock<IMapper> _mapperMock;
         private Mock<ISummonerByLeagueRepository> _repositoryMock;
         private Mock<ISummonerRepository> _repositoryMockSummoner;
         private Mock<IRiotGamesApi> _riotGamesApiMock;
@@ -29,6 +31,7 @@ namespace UnitTest.Service
         {
             _loggerMock = new Mock<ILogger<SummonerByLeagueService>>();
             ILogger<SummonerByLeagueService> logger = _loggerMock.Object;
+            _mapperMock = new Mock<IMapper>();
 
             _repositoryMock = new Mock<ISummonerByLeagueRepository>();
             _repositoryMockSummoner = new Mock<ISummonerRepository>();
@@ -37,16 +40,16 @@ namespace UnitTest.Service
             var fixture = new Fixture();
 
             var entries = fixture.CreateMany<Entry>(300).ToList();
-            var entriesRG = fixture.CreateMany<RGEntry>(300).ToList();
+            var entriesRG = fixture.CreateMany<RGApiEntry>(300).ToList();
 
             var sblChallenger = fixture.Build<SummonerByLeague>()
                 .Without(summoner => summoner._id)
-                .With(sbl => sbl.tier, Core.Enum.League.master)
+                .With(sbl => sbl.tier, "MASTER")
                 .With(sbl => sbl.entries, entries)
                 .CreateMany(3);
 
             var sblRiotChallenger = fixture.Build<RGApiSummonerByLeague>()
-                .With(sbl => sbl.tier, Core.Enum.League.challenger)
+                .With(sbl => sbl.tier, "CHALLENGER")
                 .With(sbl => sbl.entries, entriesRG)
                 .Create();
 
@@ -54,22 +57,22 @@ namespace UnitTest.Service
 
             _riotGamesApiMock.Setup(api =>
                 api.GetSummonerByLeague(
-                    It.IsAny<Core.Enum.League>(),
-                    It.IsAny<Core.Enum.Queue>()
+                    It.IsAny<string>(),
+                    It.IsAny<string>()
                 )).Returns(Task.FromResult(sblRiotChallenger));
         }
 
         [Test]
         public async Task shouldUpdateSummoners()
         {
-            var summonerByLeagueService = new SummonerByLeagueService(_loggerMock.Object, _repositoryMock.Object, _repositoryMockSummoner.Object, _riotGamesApiMock.Object);
+            var summonerByLeagueService = new SummonerByLeagueService(_loggerMock.Object, _mapperMock.Object, _repositoryMock.Object, _repositoryMockSummoner.Object, _riotGamesApiMock.Object);
 
             await summonerByLeagueService.validateSummonerByLeague();
 
             _riotGamesApiMock.Verify(d =>
                 d.GetSummonerByLeague(
-                    It.IsAny<Core.Enum.League>(),
-                    It.IsAny<Core.Enum.Queue>()),
+                    It.IsAny<string>(),
+                    It.IsAny<string>()),
                     Times.Exactly(3)
                 );
         }
@@ -77,7 +80,7 @@ namespace UnitTest.Service
         [Test]
         public void shouldBeUpdateable()
         {
-            var summonerByLeagueService = new SummonerByLeagueService(_loggerMock.Object, _repositoryMock.Object, _repositoryMockSummoner.Object, _riotGamesApiMock.Object);
+            var summonerByLeagueService = new SummonerByLeagueService(_loggerMock.Object, _mapperMock.Object, _repositoryMock.Object, _repositoryMockSummoner.Object, _riotGamesApiMock.Object);
 
             long Date_26_2023 = 1690368231392;
             long Interval_12H = 12 * 60 * 60 * 1000;
@@ -90,7 +93,7 @@ namespace UnitTest.Service
         [Test]
         public void shouldNotBeUpdateable()
         {
-            var summonerByLeagueService = new SummonerByLeagueService(_loggerMock.Object, _repositoryMock.Object, _repositoryMockSummoner.Object, _riotGamesApiMock.Object);
+            var summonerByLeagueService = new SummonerByLeagueService(_loggerMock.Object, _mapperMock.Object, _repositoryMock.Object, _repositoryMockSummoner.Object, _riotGamesApiMock.Object);
 
             long epochTicks = new DateTime(1970, 1, 1).Ticks;
             long currentDate = ((DateTime.UtcNow.Ticks - epochTicks) / TimeSpan.TicksPerSecond) * 1000;

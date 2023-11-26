@@ -9,14 +9,9 @@ namespace Core.Repository
     public class SummonerByLeagueRepository : ISummonerByLeagueRepository
     {
         private readonly ILogger<SummonerByLeagueRepository> _logger;
-
         private readonly IMongoDatabase _mongoDB;
         private readonly IMongoCollection<SummonerByLeague> _mongoCollection;
         private readonly IDateService _dateService;
-
-        public SummonerByLeagueRepository()
-        {
-        }
 
         public SummonerByLeagueRepository(ILogger<SummonerByLeagueRepository> logger, IMongoDatabase mongoDB, IDateService dateService)
         {
