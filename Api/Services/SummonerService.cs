@@ -28,7 +28,7 @@ public class SummonerService : ISummonerService
     {
         var builder = Builders<Summoner>.Filter;
 
-        var filter = builder.Eq(summoner => summoner.name, summonerName);
+        var filter = builder.Where(summoner => summoner.name!.ToLower().Equals(summonerName.ToLower()));
 
         Summoner summoner = await _summonerRepository.findOneSummonerWithFilter(filter);
 
@@ -41,7 +41,10 @@ public class SummonerService : ISummonerService
     {
         var builder = Builders<Summoner>.Filter;
 
-        var filter = builder.Regex(summoner => summoner.name, $"^{summonerName}.*"); ;
+        // / - Regular expression
+        // ^ - Beginning of a string
+        // i - Case insensitive
+        var filter = builder.Regex(summoner => summoner.name, $"/^{summonerName}/i"); ;
 
         IEnumerable<Summoner> summoners = await _summonerRepository.findSummonerWithFilter(filter);
 

@@ -135,6 +135,7 @@ namespace Dataminer.Services
                         sblRiot.entries.Count,
                         index == 0 ? 0 : (int)percentage
                     );
+
                     lastPercent = (int)percentage;
                 }
                 index++;
