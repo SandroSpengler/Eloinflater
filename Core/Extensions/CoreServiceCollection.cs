@@ -29,6 +29,8 @@ namespace Core.Extensions
 
             string apiUrl = $"{protocol}://{region}.{baseUrl}";
 
+            // var x = configuration["RiotGames:RGApiKey"]!;
+
             services.AddHttpClient(apiUrl)
             .ConfigureHttpClient(c =>
             {

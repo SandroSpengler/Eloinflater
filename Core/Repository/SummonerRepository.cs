@@ -48,9 +48,12 @@ namespace Core.Repository
 
             var builder = Builders<Summoner>.Filter;
 
-            var filter = builder.Eq("_id", summoner._id);
+            var filter = builder.Eq(s => s.summonerId, summoner.summonerId);
 
-            var result = await _mongoCollection.ReplaceOneAsync(filter, summoner);
+            var result = await _mongoCollection.ReplaceOneAsync(filter, summoner, new ReplaceOptions()
+            {
+                IsUpsert = true
+            });
         }
 
         public virtual async Task updateSummoner(FilterDefinition<Summoner> filterDefiniton, UpdateDefinition<Summoner> updateDefinition)

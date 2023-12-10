@@ -8,13 +8,13 @@ namespace Dataminer
     {
         private readonly ILogger<Scheduler> _logger;
         private readonly IConfiguration _configuration;
-        private readonly ISummonerByLeagueService _summonerByLeagueService;
+        private readonly IMiningService _miningService;
 
-        public Scheduler(ILogger<Scheduler> logger, IConfiguration configuration, ISummonerByLeagueService summonerByLeagueService)
+        public Scheduler(ILogger<Scheduler> logger, IConfiguration configuration, IMiningService summonerByLeagueService)
         {
             _logger = logger;
             _configuration = configuration;
-            _summonerByLeagueService = summonerByLeagueService;
+            _miningService = summonerByLeagueService;
         }
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -27,7 +27,9 @@ namespace Dataminer
 
                 Stopwatch watch = Stopwatch.StartNew();
 
-                await _summonerByLeagueService.validateSummonerByLeague();
+                await _miningService.refreshSummonerByLeague();
+
+                await _miningService.validateAllSummoners();
 
                 watch.Stop();
 

@@ -33,7 +33,7 @@ namespace Core.Repository
         {
             var builder = Builders<SummonerByLeague>.Filter;
 
-            var filter = builder.Eq("_id", summonerByLeague._id);
+            var filter = builder.Eq(sbl => sbl._id, summonerByLeague._id);
 
             summonerByLeague.updatedAt = _dateService.generateUnixTimeStampMilliseconds();
 

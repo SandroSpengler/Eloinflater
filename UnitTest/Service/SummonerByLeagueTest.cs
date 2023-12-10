@@ -20,7 +20,7 @@ namespace UnitTest.Service
 {
     public class SummonerByLeagueTest
     {
-        private Mock<ILogger<SummonerByLeagueService>> _loggerMock;
+        private Mock<ILogger<MiningService>> _loggerMock;
         private Mock<IMapper> _mapperMock;
         private Mock<ISummonerByLeagueRepository> _repositoryMock;
         private Mock<ISummonerRepository> _repositoryMockSummoner;
@@ -29,8 +29,8 @@ namespace UnitTest.Service
         [SetUp]
         public void Setup()
         {
-            _loggerMock = new Mock<ILogger<SummonerByLeagueService>>();
-            ILogger<SummonerByLeagueService> logger = _loggerMock.Object;
+            _loggerMock = new Mock<ILogger<MiningService>>();
+            ILogger<MiningService> logger = _loggerMock.Object;
             _mapperMock = new Mock<IMapper>();
 
             _repositoryMock = new Mock<ISummonerByLeagueRepository>();
@@ -65,9 +65,9 @@ namespace UnitTest.Service
         [Test]
         public async Task shouldUpdateSummoners()
         {
-            var summonerByLeagueService = new SummonerByLeagueService(_loggerMock.Object, _mapperMock.Object, _repositoryMock.Object, _repositoryMockSummoner.Object, _riotGamesApiMock.Object);
+            var summonerByLeagueService = new MiningService(_loggerMock.Object, _mapperMock.Object, _repositoryMock.Object, _repositoryMockSummoner.Object, _riotGamesApiMock.Object);
 
-            await summonerByLeagueService.validateSummonerByLeague();
+            await summonerByLeagueService.refreshSummonerByLeague();
 
             _riotGamesApiMock.Verify(d =>
                 d.GetSummonerByLeague(
@@ -80,7 +80,7 @@ namespace UnitTest.Service
         [Test]
         public void shouldBeUpdateable()
         {
-            var summonerByLeagueService = new SummonerByLeagueService(_loggerMock.Object, _mapperMock.Object, _repositoryMock.Object, _repositoryMockSummoner.Object, _riotGamesApiMock.Object);
+            var summonerByLeagueService = new MiningService(_loggerMock.Object, _mapperMock.Object, _repositoryMock.Object, _repositoryMockSummoner.Object, _riotGamesApiMock.Object);
 
             long Date_26_2023 = 1690368231392;
             long Interval_12H = 12 * 60 * 60 * 1000;
@@ -93,7 +93,7 @@ namespace UnitTest.Service
         [Test]
         public void shouldNotBeUpdateable()
         {
-            var summonerByLeagueService = new SummonerByLeagueService(_loggerMock.Object, _mapperMock.Object, _repositoryMock.Object, _repositoryMockSummoner.Object, _riotGamesApiMock.Object);
+            var summonerByLeagueService = new MiningService(_loggerMock.Object, _mapperMock.Object, _repositoryMock.Object, _repositoryMockSummoner.Object, _riotGamesApiMock.Object);
 
             long epochTicks = new DateTime(1970, 1, 1).Ticks;
             long currentDate = ((DateTime.UtcNow.Ticks - epochTicks) / TimeSpan.TicksPerSecond) * 1000;

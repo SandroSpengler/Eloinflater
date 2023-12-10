@@ -21,5 +21,8 @@ namespace Core.Interfaces
 
         [Get("lol/summoner/v4/summoners/by-name/{summonerName}")]
         Task<RGApiSummoner> GetSummonerByName([Path] string summonerName);
+
+        [Get("lol/summoner/v4/summoners/{summonerId}")]
+        Task<RGApiSummoner> GetSummonerBySummonerId([Path] string summonerId);
     }
 }

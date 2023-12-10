@@ -12,7 +12,9 @@ namespace Core.Model.Database
     public class Summoner
     {
         [BsonElement("_id")]
-        public string? _id { get; set; }
+        [BsonIgnoreIfDefault]
+        [BsonRepresentation(BsonType.ObjectId)]
+        public ObjectId _id { get; set; }
         public int profileIconId { get; set; }
         public long revisionDate { get; set; }
         public int summonerLevel { get; set; }

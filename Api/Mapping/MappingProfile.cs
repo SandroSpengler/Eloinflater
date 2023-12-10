@@ -20,6 +20,9 @@ public class MappingProfile : Profile
         .ReverseMap();
 
         CreateMap<RGApiSummoner, Summoner>()
+        .ForMember(summoner => summoner._id, opt => opt.Ignore())
+        .ForMember(summoner => summoner.__v, opt => opt.Ignore())
+        .ForMember(summoner => summoner.summonerId, opt => opt.MapFrom(src => src.id))
         .ReverseMap();
     }
 }

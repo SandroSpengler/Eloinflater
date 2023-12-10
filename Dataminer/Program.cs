@@ -5,6 +5,7 @@ using Dataminer;
 using Dataminer.Interfaces;
 using Dataminer.Services;
 using Infrastructure.Extension;
+using MongoDB.Driver;
 using Namespace;
 
 IHost host = Host.CreateDefaultBuilder(args)
@@ -13,7 +14,7 @@ IHost host = Host.CreateDefaultBuilder(args)
         IConfiguration configuration = hostContext.Configuration;
 
         services.AddHostedService<Scheduler>();
-        services.AddTransient<ISummonerByLeagueService, SummonerByLeagueService>();
+        services.AddTransient<IMiningService, MiningService>();
         services.AddAutoMapper(typeof(MappingProfile));
 
         InfrastructureServiceCollection.SetupServiceCollection(services, configuration);

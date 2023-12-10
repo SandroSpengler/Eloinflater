@@ -3,7 +3,7 @@ using Core.Model;
 
 namespace Dataminer.Interfaces
 {
-    public interface ISummonerByLeagueService
+    public interface IMiningService
     {
         /// <summary>
         /// Checks if an update has been done before the last updateInterval
@@ -17,7 +17,7 @@ namespace Dataminer.Interfaces
         /// Refreshes all Summoners in Master and above every 12H
         /// </summary>
         /// <returns></returns>
-        Task validateSummonerByLeague();
+        Task refreshSummonerByLeague();
 
         /// <summary>
         /// Takes the Riot SummonerByLeague and updates the SummonerByLeague in DB
@@ -26,5 +26,6 @@ namespace Dataminer.Interfaces
         /// <param name="sblRiot">New SummonerByLeague from RiotGamesApi</param>
         /// <returns></returns>
         Task updateAllSummonerByLeagueEntries(SummonerByLeague sblDB, RGApiSummonerByLeague sblRiot);
+        Task validateAllSummoners();
     }
 }

@@ -7,13 +7,14 @@ using Core.Model.Riot_Games;
 using Dataminer.Interfaces;
 using MongoDB.Bson;
 using MongoDB.Driver;
+using System.Net;
 using System.Reflection.Metadata;
 
 namespace Dataminer.Services
 {
-    public class SummonerByLeagueService : ISummonerByLeagueService
+    public class MiningService : IMiningService
     {
-        private readonly ILogger<SummonerByLeagueService> _logger;
+        private readonly ILogger<MiningService> _logger;
         private readonly IMapper _mapper;
         private readonly ISummonerByLeagueRepository _sblRepository;
         private readonly ISummonerRepository _summonerRepository;
@@ -23,8 +24,8 @@ namespace Dataminer.Services
         private readonly FilterDefinitionBuilder<SummonerByLeague> _sblFilterBuilder;
         private readonly UpdateDefinitionBuilder<SummonerByLeague> _sblUpdateBuilder;
 
-        public SummonerByLeagueService(
-            ILogger<SummonerByLeagueService> logger,
+        public MiningService(
+            ILogger<MiningService> logger,
             IMapper mapper,
             ISummonerByLeagueRepository summonerByLeagueRepository,
             ISummonerRepository summonerRepository,
@@ -42,7 +43,58 @@ namespace Dataminer.Services
             _sblUpdateBuilder = Builders<SummonerByLeague>.Update;
         }
 
-        public async Task validateSummonerByLeague()
+        public async Task validateAllSummoners()
+        {
+            try
+            {
+                var filter = _summonerFilterBuilder.Where(summoner =>
+                    String.IsNullOrEmpty(summoner.puuid) ||
+                    String.IsNullOrEmpty(summoner.accountId)
+                );
+
+                var invalidSummoner = (await _summonerRepository.findSummonerWithFilter(filter)).ToList();
+
+                _logger.LogInformation("Invalid Summoners: {0}",
+                        invalidSummoner.Count()
+                    );
+
+                int index = 0;
+
+                foreach (Summoner summoner in invalidSummoner)
+                {
+
+                    _logger.LogInformation("Validating {0}/{1} - {2}",
+                        index,
+                        invalidSummoner.Count(),
+                        summoner.name
+                );
+
+                    var rgSummoner = await _riotGamesApi.GetSummonerBySummonerId(summoner.summonerId);
+
+                    var mappedSummoner = _mapper.Map<Summoner>(rgSummoner);
+
+                    await _summonerRepository.replaceSummoner(mappedSummoner);
+
+                    index++;
+                }
+            }
+            catch (RestEase.ApiException ex)
+            {
+                if (ex.StatusCode == HttpStatusCode.Forbidden)
+                {
+                    _logger.LogError("validateAllSummoners | Exiting due to invalid API_Key | 403");
+                    Environment.Exit(1);
+                }
+
+                _logger.LogError("validateAllSummoners | Failed Updating SummonerByLeague: {0}", ex.Message);
+            }
+            catch (System.Exception ex)
+            {
+                _logger.LogError("validateAllSummoners | Failed Updating SummonerByLeague: {0}", ex.Message);
+            }
+        }
+
+        public async Task refreshSummonerByLeague()
         {
             long UpdateInterval_12H = 12 * 60 * 60 * 1000;
             var summonerByLeagueDB = (await _sblRepository.findSummonerByLeagueWithFilter(_sblFilterBuilder.Empty))
@@ -56,6 +108,12 @@ namespace Dataminer.Services
 
                 try
                 {
+                    RGApiSummonerByLeague riotSummonerByLeague = await _riotGamesApi
+                        .GetSummonerByLeague(
+                            sblDB.tier.ToLower(),
+                            Queue.RANKED_SOLO_5x5.ToString()
+                        );
+
                     await _summonerRepository.updateSummoner(
                         _summonerFilterBuilder.Eq(
                             s => s.rankSolo, sblDB.tier.ToString()
@@ -63,12 +121,6 @@ namespace Dataminer.Services
                         _summonerUpdateBuilder
                             .Set(s => s.rankSolo, "")
                     );
-
-                    RGApiSummonerByLeague riotSummonerByLeague = await _riotGamesApi
-                        .GetSummonerByLeague(
-                            sblDB.tier,
-                            Queue.RANKED_SOLO_5x5.ToString()
-                        );
 
                     await updateAllSummonerByLeagueEntries(sblDB, riotSummonerByLeague);
 
@@ -78,9 +130,20 @@ namespace Dataminer.Services
 
                     _logger.LogInformation("Finished updating SummonerByLeague {0}", sblDB.tier);
                 }
+                catch (RestEase.ApiException ex)
+                {
+                    if (ex.StatusCode == HttpStatusCode.Forbidden)
+                    {
+                        _logger.LogError("refreshSummonerByLeague | Exiting due to invalid API_Key | 403");
+                        Environment.Exit(1);
+                    }
+
+                    _logger.LogError("refreshSummonerByLeague | Failed Updating SummonerByLeague: {0}", ex.Message);
+
+                }
                 catch (Exception ex)
                 {
-                    _logger.LogError("Failed Updating SummonerByLeague: {0}", ex.Message);
+                    _logger.LogError("refreshSummonerByLeague | Failed Updating SummonerByLeague: {0}", ex.Message);
                 }
             }
         }
@@ -91,7 +154,7 @@ namespace Dataminer.Services
             int lastPercent = 0;
             foreach (RGApiEntry entry in sblRiot.entries)
             {
-                var filter = _summonerFilterBuilder.Eq(s => s._id, entry.summonerId);
+                var filter = _summonerFilterBuilder.Eq(s => s.summonerId, entry.summonerId);
 
                 Summoner summonerDB = await _summonerRepository.findOneSummonerWithFilter(filter);
 
@@ -99,7 +162,7 @@ namespace Dataminer.Services
 
                 Summoner summoner = new Summoner();
 
-                summoner._id = entry.summonerId;
+                summoner.summonerId = entry.summonerId;
                 summoner.rankSolo = sblDB.tier.ToString();
                 summoner.name = entry.summonerName;
                 summoner.leaguePoints = entry.leaguePoints;

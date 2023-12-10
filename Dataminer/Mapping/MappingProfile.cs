@@ -17,6 +17,7 @@ public class MappingProfile : Profile
         CreateMap<Entry, RGApiEntry>().ReverseMap();
 
         CreateMap<RGApiSummoner, Summoner>()
+        .ForMember(summoner => summoner.summonerId, opt => opt.MapFrom(src => src.id))
         .ReverseMap();
     }
 }
