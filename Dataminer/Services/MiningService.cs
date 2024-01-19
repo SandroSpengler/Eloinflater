@@ -163,7 +163,7 @@ namespace Dataminer.Services
                 Summoner summoner = new Summoner();
 
                 summoner.summonerId = entry.summonerId;
-                summoner.rankSolo = sblDB.tier.ToString();
+                summoner.rankSolo = sblDB.tier;
                 summoner.name = entry.summonerName;
                 summoner.leaguePoints = entry.leaguePoints;
                 summoner.rank = entry.rank;

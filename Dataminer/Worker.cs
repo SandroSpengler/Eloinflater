@@ -1,5 +1,4 @@
 using Dataminer.Interfaces;
-using Dataminer.Services;
 using System.Diagnostics;
 
 namespace Dataminer

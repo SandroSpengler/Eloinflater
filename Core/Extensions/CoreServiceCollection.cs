@@ -12,6 +12,7 @@ namespace Core.Extensions
         {
             services.AddSingleton<ISummonerByLeagueRepository, SummonerByLeagueRepository>();
             services.AddSingleton<ISummonerRepository, SummonerRepository>();
+            services.AddSingleton<IHealthCheckRepository, HealthCheckRepository>();
             services.AddSingleton<IDateService, DateService>();
 
             string? protocol = configuration["RiotGames:Protocol"];
